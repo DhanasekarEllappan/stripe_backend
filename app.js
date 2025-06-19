@@ -218,30 +218,31 @@ app.post('/create-payment-with-saved-method', async (req, res) => {
 app.post('/create-customer', async (req, res) => {
   try {
     const { email, name, phone } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ 
-        error: 'Email is required' 
+    
+    // Check if customer exists
+    const existingCustomers = await stripe.customers.list({
+      email: email,
+      limit: 1,
+    });
+    
+    let customer;
+    if (existingCustomers.data.length > 0) {
+      customer = existingCustomers.data[0];
+    } else {
+      customer = await stripe.customers.create({
+        email: email,
+        name: name,
+        phone: phone,
       });
     }
-
-    const customer = await stripe.customers.create({
-      email: email,
-      name: name,
-      phone: phone,
-    });
-
+    
     res.json({
-      customer_id: customer.id,
-      email: customer.email,
+      customerId: customer.id,
+      emai:customer.email,
+      message: 'Customer ready'
     });
-
   } catch (error) {
-    console.error('Error creating customer:', error);
-    res.status(500).json({ 
-      error: 'Failed to create customer',
-      message: error.message 
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
