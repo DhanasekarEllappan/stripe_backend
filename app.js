@@ -246,6 +246,23 @@ app.post('/create-customer', async (req, res) => {
   }
 });
 
+app.post('/get-ephemeral-key', async (req, res) => {
+  try {
+    const { customerId } = req.body;
+    
+    const ephemeralKey = await stripe.ephemeralKeys.create(
+      { customer: customerId },
+      { apiVersion: '2023-10-16' }
+    );
+    
+    res.json({
+      ephemeralKey: ephemeralKey.secret,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 7. Get payment methods for a customer (Your existing method)
 app.post('/get-payment-methods', async (req, res) => {
   try {
