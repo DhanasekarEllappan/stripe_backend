@@ -18,7 +18,7 @@ app.use(express.json());
 // 1. Create Payment Intent
 app.post("/create-payment-intent", async (req, res) => {
   try {
-    const { amount, currency = "usd", customer_email } = req.body;
+    const { amount, currency = "usd", customer_email, paymentMethod } = req.body;
 
     // Validate amount
     if (!amount || amount <= 0) {
@@ -31,9 +31,12 @@ app.post("/create-payment-intent", async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: currency,
-      automatic_payment_methods: {
-        enabled: true,
-      },
+    //   automatic_payment_methods: {
+    //     enabled: true,
+    //   },
+      payment_method_types: [
+    paymentMethod
+  ],
       metadata: {
         customer_email: customer_email || "unknown",
         order_id: `order_${Date.now()}`, // You can add your order ID here
