@@ -623,6 +623,43 @@ app.post("/create-product", async (req, res) => {
   }
 });
 
+
+// Token and payments
+app.post('/charge-token', async (req, res) => {
+  const { tokenId, amount, currency, description } = req.body;
+
+  try {
+    const charge = await stripe.charges.create({
+      amount, // e.g., 5000 = ₹50.00
+      currency, // e.g., 'inr'
+      source: tokenId,
+      description: description || 'Custom token payment',
+    });
+
+    res.json({ success: true, charge });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/attach-token-to-customer', async (req, res) => {
+  const { customerId, tokenId } = req.body;
+
+  try {
+    const card = await stripe.customers.createSource(customerId, {
+      source: tokenId,
+    });
+
+    res.json({
+      success: true,
+      card,
+      message: 'Card added to customer successfully',
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
