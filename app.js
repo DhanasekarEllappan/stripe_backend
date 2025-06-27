@@ -18,7 +18,12 @@ app.use(express.json());
 // 1. Create Payment Intent
 app.post("/create-payment-intent", async (req, res) => {
   try {
-    const { amount, currency = "usd", customer_email, paymentMethod } = req.body;
+    const {
+      amount,
+      currency = "usd",
+      customer_email,
+      paymentMethod,
+    } = req.body;
 
     // Validate amount
     if (!amount || amount <= 0) {
@@ -31,12 +36,10 @@ app.post("/create-payment-intent", async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100), // Convert to cents
       currency: currency,
-    //   automatic_payment_methods: {
-    //     enabled: true,
-    //   },
-      payment_method_types: [
-    paymentMethod
-  ],
+      //   automatic_payment_methods: {
+      //     enabled: true,
+      //   },
+      payment_method_types: [paymentMethod],
       metadata: {
         customer_email: customer_email || "unknown",
         order_id: `order_${Date.now()}`, // You can add your order ID here
@@ -626,9 +629,8 @@ app.post("/create-product", async (req, res) => {
   }
 });
 
-
 // Token and payments
-app.post('/charge-token', async (req, res) => {
+app.post("/charge-token", async (req, res) => {
   const { tokenId, amount, currency, description } = req.body;
 
   try {
@@ -636,7 +638,7 @@ app.post('/charge-token', async (req, res) => {
       amount, // e.g., 5000 = ₹50.00
       currency, // e.g., 'inr'
       source: tokenId,
-      description: description || 'Custom token payment',
+      description: description || "Custom token payment",
     });
 
     res.json({ success: true, charge });
@@ -661,6 +663,23 @@ app.post('/attach-token-to-customer', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+app.post("/update-cvc-token", async (req, res) => {
+  try {
+    const { customerId, cardId, token } = req.body;
+    const card = await stripe.customers.updateSource(customerId, cardId, {
+      cvc_update_token: token,
+    });
+    res.json({
+      success: true,
+      card,
+      message: "Card updated to customer successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+  
 });
 
 // Start server
